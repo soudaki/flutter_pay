@@ -38,7 +38,9 @@ class FlutterPayPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
                 .setEnvironment(environment)
                 .setTheme(WalletConstants.THEME_LIGHT)
                 .build()
-        this.googlePayClient = Wallet.getPaymentsClient(this.activity, walletOptions)
+        this.activity?.let { activity ->
+            this.googlePayClient = Wallet.getPaymentsClient(activity, walletOptions)
+        }
     }
 
     companion object {
