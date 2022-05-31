@@ -21,7 +21,7 @@ import org.json.JSONObject
 class FlutterPayPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.ActivityResultListener, ActivityAware {
 
     private lateinit var googlePayClient: PaymentsClient
-    private lateinit var activity: Activity
+    private var activity: Activity? = null
     private var environment = WalletConstants.ENVIRONMENT_PRODUCTION
 
     private val LOAD_PAYMENT_DATA_REQUEST_CODE = 991
@@ -48,7 +48,7 @@ class FlutterPayPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
             val plugin = FlutterPayPlugin()
             channel.setMethodCallHandler(plugin)
             registrar.addActivityResultListener(plugin)
-            plugin.activity = registrar.activity()!!
+            plugin.activity = registrar.activity()
             plugin.createPaymentsClient()
         }
     }
@@ -217,18 +217,19 @@ class FlutterPayPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
         print("phone required: ${paymentDataRequest.isPhoneNumberRequired}\n")
         print("Payment data request: ${paymentDataRequest.toJson()}\n")
 
-        if (paymentDataRequest != null) {
-            val task = googlePayClient
-                    .loadPaymentData(paymentDataRequest)
-                    .addOnCompleteListener {
-                        try {
-                            print("${it.getResult(ApiException::class.java)}")
-                        } catch (e: ApiException) {
+        val task = googlePayClient
+                .loadPaymentData(paymentDataRequest)
+                .addOnCompleteListener {
+                    try {
+                        print("${it.getResult(ApiException::class.java)}")
+                    } catch (e: ApiException) {
 
-                            print("Tortik:  ${e.message}\n")
-                        }
+                        print("Tortik:  ${e.message}\n")
                     }
-            AutoResolveHelper.resolveTask(task, this.activity, LOAD_PAYMENT_DATA_REQUEST_CODE)
+                }
+        this.activity?.let {
+            AutoResolveHelper.resolveTask(task,
+                it, LOAD_PAYMENT_DATA_REQUEST_CODE)
         }
 
     }
